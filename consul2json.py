@@ -11,7 +11,11 @@ def nested_dict():
     return defaultdict(nested_dict)
 
 def checkIfKey(path,session):
-    check = toolz.get_in(path,session.kv,default='notDefined')
+    try:
+        check = session.kv[path]
+    except:
+        check = 'notDefined'
+            
     if check == 'notDefined':
         return False
     return True
