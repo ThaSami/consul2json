@@ -15,14 +15,17 @@ def checkIfKey(path,session):
         check = session.kv[path]
     except:
         check = 'notDefined'
-            
+
     if check == 'notDefined':
         return False
     return True
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-k','--key', dest='KEY',
-                        help="specifies key or path",required=True)
+                        help="specifies key or path",required=True)         
+parser.add_argument('-f','--file', dest='FILE',
+                        help="specifies the file to put data in",required=True)     
+
 parser.add_argument('-t','--token', dest='TOKEN',
                     help="specify consul token",required=False)
 parser.add_argument('--host',dest='HOST', default='localhost', help="defines the host link of consul")
@@ -37,7 +40,7 @@ session = consulate.Consul(host=args.HOST, port=args.PORT,
 
 
 if checkIfKey(args.KEY,session):
-    with open('test.json','w') as f:
+    with open(args.FILE,'w') as f:
         json.dump(session.kv[args.KEY],f)
     sys.exit(0)
 
@@ -46,7 +49,7 @@ try:
     for key, value in session.kv.find(args.KEY).items():
         nd.update(toolz.assoc_in(nd, key.split('/'), value)) 
 
-    with open('test.json','w') as f:
+    with open(args.FILE,'w') as f:
         json.dump(dict(nd),f)
         
 except Exception as e:
