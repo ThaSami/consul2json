@@ -1,5 +1,6 @@
 # consul2json
 
+ keystore from specified key to JSON file
 
 
 ## Required packages
