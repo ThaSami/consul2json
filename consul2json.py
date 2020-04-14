@@ -46,8 +46,14 @@ if checkIfKey(args.KEY,session):
 
 try:
     nd = nested_dict()
+    keylen = len(args.KEY.split('/'))
+
+    if args.KEY.endswith('/'):
+        keylen = len(args.KEY.split('/')) - 1
+          
     for key, value in session.kv.find(args.KEY).items():
-        nd.update(toolz.assoc_in(nd, key.split('/'), value)) 
+        keysToPut = [i for i in key.split('/')[keylen:]] 
+        nd.update(toolz.assoc_in(nd, keysToPut, value)) 
 
     with open(args.FILE,'w') as f:
         json.dump(dict(nd),f)
