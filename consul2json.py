@@ -81,7 +81,6 @@ def getArgs():
 
 
 if __name__ == "__main__":
-    pass
     args = getArgs()
     c2j = Consul2Json(host=args.HOST, port=args.PORT,
                            scheme=args.SCHEME, token=args.TOKEN)    
