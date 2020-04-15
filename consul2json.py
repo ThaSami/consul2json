@@ -3,60 +3,86 @@ import toolz
 import json
 from collections import defaultdict
 import argparse
-import sys
 import logging
 import traceback
 
-def nested_dict():
-    return defaultdict(nested_dict)
+class Consul2Json():
+    
+    def __init__(self,host,port,scheme,token):
+        self.host = host
+        self.port = port 
+        self.scheme = scheme 
+        self.token = token
+        self.session = consulate.Consul(host=host, port=port,
+                           scheme=scheme, token=token)    
 
-def checkIfKey(path,session):
-    try:
-        check = session.kv[path]
-    except:
-        check = 'notDefined'
+    def nested_dict(self):
+        return defaultdict(self.nested_dict)
 
-    if check == 'notDefined':
-        return False
-    return True
+    def checkIfKey(self,path):
+        ''' checks if the given path is a key with a value '''
+        try:
+            check = self.session.kv[path]
+            return True
+        except:
+            return False
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-k','--key', dest='KEY',
-                        help="specifies key or path",required=True)         
-parser.add_argument('-f','--file', dest='FILE',
-                        help="specifies the file to put data in",required=True)     
+    def getKey(self,key):
+        ''' return the associated value given a key '''
+        try:
+            result = self.session.kv[key]
+            return result
+        except Exception as e:
+            logging.error(traceback.format_exc())
+            return "notDefined" 
+    
 
-parser.add_argument('-t','--token', dest='TOKEN',
-                    help="specify consul token",required=False)
-parser.add_argument('--host',dest='HOST', default='localhost', help="defines the host link of consul")
-parser.add_argument('-p','--port',dest='PORT', default='8500', help="defines the host port of consul")
-parser.add_argument('-s','--scheme',dest='SCHEME', default='http', help="defines connection scheme")
+    def getIfPath(self,path):
+        ''' returns a structured nested dictionary with all values and keys in a given path ''' 
+        try:
+            nd = self.nested_dict()
+            keylen = len(path.split('/'))
+            if path.endswith('/'):
+                keylen = len(path.split('/')) - 1
+                
+            for key, value in self.session.kv.find(path).items():
+                keysToPut = [i for i in key.split('/')[keylen:]] 
+                nd.update(toolz.assoc_in(nd, keysToPut, value)) 
+            return dict(nd)  
 
-args = parser.parse_args()
+        except Exception as e:
+            logging.error(traceback.format_exc())
+            return {}
 
-session = consulate.Consul(host=args.HOST, port=args.PORT,
+    def getVal(self,path):
+        ''' try to get a value if it is a key, if it failed it will try to get it as a path. '''
+        if self.checkIfKey(path):
+            return self.getKey(path)
+        return self.getIfPath(path)
+
+
+    def describe(self):
+        return "host {},port {}, scheme {}, token {}".format(self.host,self.port,self.scheme,self.token)
+    
+
+def getArgs():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-k','--key', dest='KEY',
+                            help="specifies key or path",required=True)  
+
+    parser.add_argument('-t','--token', dest='TOKEN',
+                        help="specify consul token",required=False)
+    parser.add_argument('--host',dest='HOST', default='localhost', help="defines the host link of consul")
+    parser.add_argument('-p','--port',dest='PORT', default='8500', help="defines the host port of consul")
+    parser.add_argument('-s','--scheme',dest='SCHEME', default='http', help="defines connection scheme")
+
+    args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    pass
+    args = getArgs()
+    c2j = Consul2Json(host=args.HOST, port=args.PORT,
                            scheme=args.SCHEME, token=args.TOKEN)    
-
-
-
-if checkIfKey(args.KEY,session):
-    with open(args.FILE,'w') as f:
-        json.dump(session.kv[args.KEY],f)
-    sys.exit(0)
-
-try:
-    nd = nested_dict()
-    keylen = len(args.KEY.split('/'))
-
-    if args.KEY.endswith('/'):
-        keylen = len(args.KEY.split('/')) - 1
-          
-    for key, value in session.kv.find(args.KEY).items():
-        keysToPut = [i for i in key.split('/')[keylen:]] 
-        nd.update(toolz.assoc_in(nd, keysToPut, value)) 
-
-    with open(args.FILE,'w') as f:
-        json.dump(dict(nd),f)
-        
-except Exception as e:
-        logging.error(traceback.format_exc())
+    print(c2j.getVal(args.KEY))
