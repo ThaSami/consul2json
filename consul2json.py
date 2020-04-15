@@ -5,6 +5,7 @@ from collections import defaultdict
 import argparse
 import logging
 import traceback
+import json
 
 class Consul2Json():
     
@@ -31,7 +32,7 @@ class Consul2Json():
         ''' return the associated value given a key '''
         try:
             result = self.session.kv[key]
-            return result
+            return json.dumps(result)
         except Exception as e:
             logging.error(traceback.format_exc())
             return "notDefined" 
@@ -48,7 +49,7 @@ class Consul2Json():
             for key, value in self.session.kv.find(path).items():
                 keysToPut = [i for i in key.split('/')[keylen:]] 
                 nd.update(toolz.assoc_in(nd, keysToPut, value)) 
-            return dict(nd)  
+            return json.dumps(dict(nd))  
 
         except Exception as e:
             logging.error(traceback.format_exc())
