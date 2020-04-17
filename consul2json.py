@@ -9,6 +9,7 @@ import json
 
 class Consul2Json():
     
+
     def __init__(self,host,port,scheme,token):
         self.host = host
         self.port = port 
@@ -33,13 +34,15 @@ class Consul2Json():
         try:
             result = self.session.kv[key]
             return json.dumps(result)
-        except Exception as e:
+        except Exception as x:
             logging.error(traceback.format_exc())
-            return "notDefined" 
+            return json.dumps(traceback.format_exc())
     
 
     def getIfPath(self,path):
         ''' returns a structured nested dictionary with all values and keys in a given path ''' 
+        if not path.endswith('/'):
+            path+='/'
         try:
             nd = self.nested_dict()
             keylen = len(path.split('/'))
@@ -48,18 +51,27 @@ class Consul2Json():
                 
             for key, value in self.session.kv.find(path).items():
                 keysToPut = [i for i in key.split('/')[keylen:]] 
-                nd.update(toolz.assoc_in(nd, keysToPut, value)) 
-            return json.dumps(dict(nd))  
+                nd.update(toolz.assoc_in(nd, keysToPut, value))
+            if len(nd) > 0:
+                return json.dumps(dict(nd))  
+            return 'Not Defined'
 
         except Exception as e:
             logging.error(traceback.format_exc())
-            return {}
+            return json.dumps(traceback.format_exc())
 
     def getVal(self,path):
         ''' try to get a value if it is a key, if it failed it will try to get it as a path. '''
         if self.checkIfKey(path):
             return self.getKey(path)
         return self.getIfPath(path)
+
+    def heartBeat(self):
+        try:
+            check = self.session.kv['ping']
+            return True
+        except:
+            return False
 
 
     def describe(self):
