@@ -10,9 +10,8 @@
 ## Usage
 
 
-```
-  usage: consul2json.py [-h] -k KEY [-t TOKEN] [--host HOST] [-p PORT]
-                      [-s SCHEME]
+`
+``usage: consul2json.py [-h] -k KEY [-t TOKEN] [--host HOST] [-p PORT] [-s SCHEME] -f FILE
 
   optional arguments:
     -h, --help            show this help message and exit
@@ -23,5 +22,6 @@
     -p PORT, --port PORT  defines the host port of consul
     -s SCHEME, --scheme SCHEME
                           defines connection scheme
+    -f FILE define file name to dump the output on.                      
 
 ```
