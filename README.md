@@ -10,8 +10,8 @@
 ## Usage
 
 
-`
-``usage: consul2json.py [-h] -k KEY [-t TOKEN] [--host HOST] [-p PORT] [-s SCHEME] -f FILE
+```
+usage: consul2json.py [-h] -k KEY [-t TOKEN] [--host HOST] [-p PORT] [-s SCHEME] -f FILE
 
   optional arguments:
     -h, --help            show this help message and exit
